@@ -1,14 +1,20 @@
 #!/usr/bin/env python
+import os
+
 from woocommerce import API
 import json
 
-# API Config JSON path
+# API Config JSON path (MUST EXIST, make from config.json.default)
 config_json = 'config.json'
+
+# App data save to JSON (should not exist on first run)
+app_data_path = 'app-data.json'
 
 
 class WoocommerceHandler:
-    def __init__(self, config_json):
+    def __init__(self, config_json, app_data_path=app_data_path):
         # Variables
+        self.app_data = self.AppData(app_data_path)
         self.endpoints = {
             'products': 'products',
             'orders': 'orders'
@@ -39,15 +45,51 @@ class WoocommerceHandler:
             version="wc/v3"
         )
 
-    def get_items(self, name, item_id=None):
+    class AppData:
+        def __init__(self, app_data_path):
+            self.app_data_path = app_data_path
+            if not os.path.exists(self.app_data_path):
+                self.initialize()
+
+        def initialize(self):
+            with open(self.app_data_path, 'w') as f:
+                json.dump({}, f)
+
+        def load(self):
+            with open(self.app_data_path) as f:
+                self.data = json.load(f)
+
+        def save(self):
+            with open(self.app_data_path, 'w') as f:
+                json.dump(self.data, f)
+
+        def get(self, key):
+            self.load()
+            return self.data.get(key)
+
+        def set(self, key, value):
+            self.load()
+            self.data[key] = value
+            self.save()
+
+    def get_items(self, name, item_id=None, params=None):
         if item_id:
             suffix = '/' + str(item_id)
         else:
             suffix = ''
-        return self.wcapi.get(self.endpoints[name] + suffix).json()
+        if params:
+            return self.wcapi.get(self.endpoints[name] + suffix, params=params).json()
+        else:
+            return self.wcapi.get(self.endpoints[name] + suffix).json()
 
-    def get_orders(self):
-        return self.get_items('orders')
+    def get_orders(self, after=None):
+        if after:
+            return self.get_items('orders', params={
+                'status': 'processing',
+                'after': ''
+            })
+        else:
+            return self.get_items('orders')
 
     def get_order(self, order_id):
         order_raw = self.get_items('orders', order_id)
@@ -92,7 +134,6 @@ class WoocommerceHandler:
 
 def main():
     wch = WoocommerceHandler(config_json)
-
 
 
 if __name__ == '__main__':
