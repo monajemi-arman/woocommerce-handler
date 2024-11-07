@@ -84,10 +84,7 @@ class WoocommerceHandler:
 
     def get_orders(self, after=None):
         if after:
-            return self.get_items('orders', params={
-                'status': 'processing',
-                'after': ''
-            })
+            return self.get_items('orders', params={'after': after})
         else:
             return self.get_items('orders')
 
@@ -134,6 +131,8 @@ class WoocommerceHandler:
 
 def main():
     wch = WoocommerceHandler(config_json)
+    out = wch.get_orders(after='2024-01-01T00:00:00')
+    print(out)
 
 
 if __name__ == '__main__':
