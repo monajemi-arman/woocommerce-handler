@@ -1,8 +1,7 @@
 #!/usr/bin/env python
-import os
-
-from woocommerce import API
 import json
+import os
+from woocommerce import API
 
 # API Config JSON path (MUST EXIST, make from config.json.default)
 config_json = 'config.json'
@@ -14,7 +13,13 @@ app_data_path = 'app-data.json'
 class WoocommerceHandler:
     def __init__(self, config_json, app_data_path=app_data_path):
         # Variables
-        self.app_data = self.AppData(app_data_path)
+        self.app_data_vars = {
+            'last_order_time': 'last_order_time'
+        }
+        self.app_data_vars_default = {
+            'last_order_time': '2024-01-01T00:00:00'
+        }
+        self.app_data = self.AppData(app_data_path, defaults=self.app_data_vars_default)
         self.endpoints = {
             'products': 'products',
             'orders': 'orders'
@@ -46,14 +51,15 @@ class WoocommerceHandler:
         )
 
     class AppData:
-        def __init__(self, app_data_path):
+        def __init__(self, app_data_path, defaults={}):
             self.app_data_path = app_data_path
+            self.defaults = defaults
             if not os.path.exists(self.app_data_path):
                 self.initialize()
 
         def initialize(self):
             with open(self.app_data_path, 'w') as f:
-                json.dump({}, f)
+                json.dump(self.defaults, f)
 
         def load(self):
             with open(self.app_data_path) as f:
@@ -128,11 +134,18 @@ class WoocommerceHandler:
                               self.property_names['manage_stock']: True}
         return self.update_product(product_id, property_key_value)
 
+    @property
+    def last_order_time(self):
+        return self.app_data.get(self.app_data_vars['last_order_time'])
+
+    @last_order_time.setter
+    def last_order_time(self, newtime):
+        self.app_data.set(self.app_data_vars['last_order_time'], newtime)
+
 
 def main():
     wch = WoocommerceHandler(config_json)
-    out = wch.get_orders(after='2024-01-01T00:00:00')
-    print(out)
+    print(wch.last_order_time)
 
 
 if __name__ == '__main__':
