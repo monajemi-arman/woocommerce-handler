@@ -1,2 +1,2 @@
 #!/usr/bin/env python
-from woocommerce_handler import WoocommerceHandler
+from .woocommerce_handler import WoocommerceHandler
