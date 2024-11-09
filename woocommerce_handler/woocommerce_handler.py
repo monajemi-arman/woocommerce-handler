@@ -163,7 +163,7 @@ class WoocommerceHandler:
         self.app_data.set(self.app_data_vars['last_order_time'], newtime)
 
     def to_time(self, datetime_string, format='%Y-%m-%dT%H:%M:%S'):
-        datetime.strptime(datetime_string, format)
+        return datetime.strptime(datetime_string, format)
 
     def listen_orders(self, action):
         """
