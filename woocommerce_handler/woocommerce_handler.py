@@ -1,7 +1,10 @@
 #!/usr/bin/env python
+import datetime
 import json
 import os
 from woocommerce import API
+from time import sleep
+from datetime import datetime
 
 # API Config JSON path (MUST EXIST, make from config.json.default)
 config_json = 'config.json'
@@ -12,6 +15,11 @@ app_data_path = 'app-data.json'
 
 class WoocommerceHandler:
     def __init__(self, config_json, app_data_path=app_data_path):
+        """
+        Initialize WooCommerce Handler
+        :param config_json: Path to config.json, sample is in config.json.default in root of project.
+        :param app_data_path: (Optional) Give path to previous app data
+        """
         # Variables
         self.app_data_vars = {
             'last_order_time': 'last_order_time'
@@ -41,12 +49,12 @@ class WoocommerceHandler:
         }
 
         with open(config_json) as f:
-            config = json.load(f)
+            self.config = json.load(f)
 
         self.wcapi = API(
-            url=config["url"],
-            consumer_key=config["consumer_key"],
-            consumer_secret=config["consumer_secret"],
+            url=self.config["url"],
+            consumer_key=self.config["consumer_key"],
+            consumer_secret=self.config["consumer_secret"],
             version="wc/v3"
         )
 
@@ -94,8 +102,7 @@ class WoocommerceHandler:
         else:
             return self.get_items('orders')
 
-    def get_order(self, order_id):
-        order_raw = self.get_items('orders', order_id)
+    def process_order(self, order_raw):
         # Customer info
         order = self.templates['order']
         order['customer']['id'] = order_raw.get(self.property_names['customer_id'])
@@ -110,6 +117,10 @@ class WoocommerceHandler:
             quantity = line_item['quantity']
             order['products'].append([product_id, quantity])
         return order
+
+    def get_order(self, order_id):
+        order_raw = self.get_items('orders', order_id)
+        return self.process_order(order_raw)
 
     def get_products(self):
         return self.get_items('products')
@@ -142,11 +153,28 @@ class WoocommerceHandler:
     def last_order_time(self, newtime):
         self.app_data.set(self.app_data_vars['last_order_time'], newtime)
 
+    def to_time(self, datetime_string, format='%Y-%m-%dT%H:%M:%S'):
+        datetime.strptime(datetime_string, format)
 
-def main():
-    wch = WoocommerceHandler(config_json)
-    print(wch.last_order_time)
+    def listen_orders(self, action):
+        """
+        Listen for new orders and do action upon new order
+        :param action: Function to be called after new order is received
+        :return: Returns new order in processed format
+        """
+        while True:
+            orders = self.get_orders(after=self.last_order_time)
+            for order_raw in orders:
+                # Update last order time if new order
+                order_time = order_raw['date_created']
+                if self.to_time(order_time) > self.to_time(self.last_order_time):
+                    self.last_order_time = order_time
 
+                # Process order
+                order = self.process_order(order_raw)
 
-if __name__ == '__main__':
-    main()
+                # Action on order
+                action(order)
+
+            # Wait before re-fetching orders
+            sleep(self.config["interval"])
