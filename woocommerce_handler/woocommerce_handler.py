@@ -174,16 +174,17 @@ class WoocommerceHandler:
         while True:
             orders = self.get_orders(after=self.last_order_time)
             for order_raw in orders:
-                # Update last order time if new order
-                order_time = order_raw['date_created']
-                if self.to_time(order_time) > self.to_time(self.last_order_time):
-                    self.last_order_time = order_time
-
                 # Process order
                 order = self.process_order(order_raw)
 
                 # Action on order
-                action(order)
+                result = action(order)
+
+                # Update last order time if new order is successfully processed
+                if result:
+                    order_time = order_raw['date_created']
+                    if self.to_time(order_time) > self.to_time(self.last_order_time):
+                        self.last_order_time = order_time
 
             # Wait before re-fetching orders
             sleep(self.config["interval"])
