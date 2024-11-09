@@ -17,8 +17,17 @@ class WoocommerceHandler:
     def __init__(self, config_json, app_data_path=app_data_path):
         """
         Initialize WooCommerce Handler
-        :param config_json: Path to config.json, sample is in config.json.default in root of project.
-        :param app_data_path: (Optional) Give path to previous app data
+        :param config_json: Path to config.json, sample as below, also is in config.json.default in root of project.
+        :param app_data_path: (Optional) Give path to previous app data, not required on first run
+
+        Sample config.json
+        {
+          "url": "URL TO YOUR SITE",
+          "consumer_key": "CHANGE THIS",
+          "consumer_secret": "CHANGE THIS",
+          "interval": 20
+        }
+
         """
         # Variables
         self.app_data_vars = {
