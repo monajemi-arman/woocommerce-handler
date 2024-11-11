@@ -165,7 +165,7 @@ class WoocommerceHandler:
     def to_time(self, datetime_string, format='%Y-%m-%dT%H:%M:%S'):
         return datetime.strptime(datetime_string, format)
 
-    def listen_orders(self, action):
+    def listen_orders(self, action, only_completed=True):
         """
         Listen for new orders and do action upon new order
         :param action: Function to be called after new order is received
@@ -174,6 +174,10 @@ class WoocommerceHandler:
         while True:
             orders = self.get_orders(after=self.last_order_time)
             for order_raw in orders:
+                # Skip incomplete orders
+                if only_completed and order_raw['status'] != 'completed':
+                    continue
+
                 # Process order
                 order = self.process_order(order_raw)
 
