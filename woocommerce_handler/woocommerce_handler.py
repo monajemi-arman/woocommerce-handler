@@ -165,7 +165,7 @@ class WoocommerceHandler:
     def to_time(self, datetime_string, format='%Y-%m-%dT%H:%M:%S'):
         return datetime.strptime(datetime_string, format)
 
-    def listen_orders(self, action, only_completed=True):
+    def listen_orders(self, action, status=['on-hold', 'completed']):
         """
         Listen for new orders and do action upon new order
         :param action: Function to be called after new order is received
@@ -175,7 +175,7 @@ class WoocommerceHandler:
             orders = self.get_orders(after=self.last_order_time)
             for order_raw in orders:
                 # Skip incomplete orders
-                if only_completed and order_raw['status'] != 'completed':
+                if order_raw['status'] not in status:
                     continue
 
                 # Process order
