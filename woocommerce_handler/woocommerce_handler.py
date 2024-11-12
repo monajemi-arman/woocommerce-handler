@@ -2,6 +2,8 @@
 import datetime
 import json
 import os
+from http.client import responses
+
 from woocommerce import API
 from time import sleep
 from datetime import datetime
@@ -131,8 +133,26 @@ class WoocommerceHandler:
         order_raw = self.get_items('orders', order_id)
         return self.process_order(order_raw)
 
-    def get_products(self):
-        return self.get_items('products')
+    def get_products(self, id_price_only=False):
+        # Gradually get products to prevent overload
+        products = []
+        page = 1
+        while True:
+            data = self.get_items(self.endpoints['products'], params={'page': page, 'per_page': 100})
+
+            if not data:
+                break
+
+            for product in data:
+                if id_price_only:
+                    product_info = (product["id"], product["price"])
+                    products.append(product_info)
+                else:
+                    products.append(product)
+
+            page += 1
+
+        return products
 
     def get_product(self, product_id):
         return self.get_items('products', product_id)
