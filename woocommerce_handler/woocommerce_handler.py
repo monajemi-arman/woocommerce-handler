@@ -145,8 +145,12 @@ class WoocommerceHandler:
 
             for product in data:
                 if id_stock_price_only:
+                    if product[self.property_names['price'][1]]:
+                        price = product[self.property_names['price'][1]]
+                    else:
+                        price = product[self.property_names['price'][0]]
                     product_info = (product["id"], product[self.property_names['stock_quantity']],
-                                    float(product[self.property_names['price'][1]]))
+                                    float(price]))
                     products.append(product_info)
                 else:
                     products.append(product)
