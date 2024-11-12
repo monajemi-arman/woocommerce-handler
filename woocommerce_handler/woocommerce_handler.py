@@ -133,7 +133,7 @@ class WoocommerceHandler:
         order_raw = self.get_items('orders', order_id)
         return self.process_order(order_raw)
 
-    def get_products(self, id_price_only=False):
+    def get_products(self, id_stock_price_only=False):
         # Gradually get products to prevent overload
         products = []
         page = 1
@@ -144,8 +144,9 @@ class WoocommerceHandler:
                 break
 
             for product in data:
-                if id_price_only:
-                    product_info = (product["id"], float(product["price"]))
+                if id_stock_price_only:
+                    product_info = (product["id"], product[self.property_names['stock_quantity']],
+                                    float(product["price"]))
                     products.append(product_info)
                 else:
                     products.append(product)
