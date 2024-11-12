@@ -47,6 +47,7 @@ class WoocommerceHandler:
             'price': ['price', 'regular_price'],
             'sale_price': 'sale_price',
             'stock_quantity': 'stock_quantity',
+            'stock_status': ['stock_status', 'outofstock', 'instock'],
             'manage_stock': 'manage_stock',
             'customer_id': 'customer_id',
             'billing': 'billing',
